@@ -250,6 +250,103 @@
             color: #666;
             margin-left: 15px;
         }
+
+        .speaker-names-btn {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .speaker-names-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .speaker-name-input {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .speaker-name-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .speaker-name-input input:focus {
+            border-color: #9b59b6;
+        }
+
+        .speaker-color-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -273,6 +370,10 @@
                 </select>
                 <span class="current-speaker-indicator indicator-1" id="speaker-indicator"></span>
             </div>
+            
+            <button class="btn speaker-names-btn" onclick="openSpeakerNamesModal()">
+                ✏️ Имена спикеров
+            </button>
             
             <span class="recording-time" id="recording-time">00:00</span>
         </div>
@@ -301,6 +402,37 @@
         Текст скопирован в буфер обмена!
     </div>
 
+    <div class="modal-overlay" id="speaker-names-modal">
+        <div class="modal">
+            <h2>✏️ Назначить имена спикерам</h2>
+            
+            <div class="speaker-name-input">
+                <span class="speaker-color-indicator indicator-1"></span>
+                <input type="text" id="speaker-name-1" placeholder="Имя для Спикера 1" value="Спикер 1">
+            </div>
+            
+            <div class="speaker-name-input">
+                <span class="speaker-color-indicator indicator-2"></span>
+                <input type="text" id="speaker-name-2" placeholder="Имя для Спикера 2" value="Спикер 2">
+            </div>
+            
+            <div class="speaker-name-input">
+                <span class="speaker-color-indicator indicator-3"></span>
+                <input type="text" id="speaker-name-3" placeholder="Имя для Спикера 3" value="Спикер 3">
+            </div>
+            
+            <div class="speaker-name-input">
+                <span class="speaker-color-indicator indicator-4"></span>
+                <input type="text" id="speaker-name-4" placeholder="Имя для Спикера 4" value="Спикер 4">
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-save" onclick="saveSpeakerNames()">💾 Сохранить</button>
+                <button class="btn btn-cancel" onclick="closeSpeakerNamesModal()">❌ Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let recognition = null;
         let isRecording = false;
@@ -308,6 +440,14 @@
         let transcriptData = [];
         let recordingStartTime = null;
         let recordingTimer = null;
+        
+        // Имена спикеров по умолчанию
+        let speakerNames = {
+            '1': 'Спикер 1',
+            '2': 'Спикер 2',
+            '3': 'Спикер 3',
+            '4': 'Спикер 4'
+        };
 
         // Проверка поддержки Web Speech API
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -417,13 +557,6 @@
             const lineDiv = document.createElement('div');
             lineDiv.className = 'transcript-line speaker-' + speaker;
             
-            const speakerNames = {
-                '1': 'Спикер 1',
-                '2': 'Спикер 2',
-                '3': 'Спикер 3',
-                '4': 'Спикер 4'
-            };
-
             lineDiv.innerHTML = `
                 <div class="speaker-label">${speakerNames[speaker]}</div>
                 <div class="transcript-text">${escapeHtml(text)}</div>
@@ -486,13 +619,6 @@
         }
 
         function getFullTranscript() {
-            const speakerNames = {
-                '1': 'Спикер 1',
-                '2': 'Спикер 2',
-                '3': 'Спикер 3',
-                '4': 'Спикер 4'
-            };
-
             return transcriptData.map(item => {
                 return `${speakerNames[item.speaker]}: ${item.text}`;
             }).join('\n');
@@ -541,6 +667,44 @@
                 `;
             }
         }
+
+        // Функции для управления именами спикеров
+        function openSpeakerNamesModal() {
+            // Загружаем текущие имена в поля ввода
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById('speaker-name-' + i).value = speakerNames[i.toString()];
+            }
+            document.getElementById('speaker-names-modal').classList.add('show');
+        }
+
+        function closeSpeakerNamesModal() {
+            document.getElementById('speaker-names-modal').classList.remove('show');
+        }
+
+        function saveSpeakerNames() {
+            // Сохраняем имена из полей ввода
+            for (let i = 1; i <= 4; i++) {
+                const name = document.getElementById('speaker-name-' + i).value.trim();
+                if (name) {
+                    speakerNames[i.toString()] = name;
+                }
+            }
+            closeSpeakerNamesModal();
+        }
+
+        // Закрытие модального окна при клике вне его
+        document.getElementById('speaker-names-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSpeakerNamesModal();
+            }
+        });
+
+        // Закрытие модального окна по клавише Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSpeakerNamesModal();
+            }
+        });
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
