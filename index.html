@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a90d9">
+    <meta name="description" content="Игра Запомни цвет - проверь свою память цветов">
+    <title>Запомни цвет</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .color-block {
+            width: 100%;
+            height: 300px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .timer {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .timer.warning {
+            color: #e74c3c;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .color-picker-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .color-picker-wrapper {
+            margin: 20px 0;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 60px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .result {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+
+        .result.fail {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+
+        .similarity-score {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .score-high {
+            color: #28a745;
+        }
+
+        .score-low {
+            color: #dc3545;
+        }
+
+        .level-info {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .original-color-preview,
+        .selected-color-preview {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            margin: 5px;
+            vertical-align: middle;
+        }
+
+        .color-comparison {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Запомни цвет</h1>
+        
+        <div id="start-screen">
+            <p style="margin: 20px 0; color: #666;">
+                Запомните цвет, который появится на экране.<br>
+                У вас есть 5 секунд!<br><br>
+                Если вы угадаете цвет с точностью более 75%,<br>
+                вы перейдете на следующий уровень.
+            </p>
+            <button class="btn" onclick="startGame()">Начать игру</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="level-info">Уровень: <span id="level">1</span></div>
+            
+            <div id="memorize-phase">
+                <div class="color-block" id="color-block"></div>
+                <div class="timer" id="timer">5000</div>
+            </div>
+
+            <div id="pick-phase" class="color-picker-section">
+                <p style="color: #666; margin-bottom: 10px;">Выберите цвет, который вы запомнили:</p>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="color-picker" value="#ffffff">
+                </div>
+                <button class="btn" onclick="checkColor()">OK</button>
+            </div>
+
+            <div id="result-screen" class="result">
+                <h2 id="result-title"></h2>
+                <div class="color-comparison">
+                    <div>
+                        <div class="original-color-preview" id="original-preview"></div>
+                        <p>Оригинал</p>
+                    </div>
+                    <div>
+                        <div class="selected-color-preview" id="selected-preview"></div>
+                        <p>Ваш выбор</p>
+                    </div>
+                </div>
+                <div class="similarity-score" id="similarity-score"></div>
+                <p id="result-message"></p>
+                <button class="btn" id="next-btn" onclick="nextLevel()">Следующий уровень</button>
+                <button class="btn btn-secondary" id="restart-btn" onclick="restartGame()">Начать заново</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let originalColor = '';
+        let timerInterval = null;
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered:', reg))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        }
+
+        function generateRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function calculateSimilarity(color1, color2) {
+            const rgb1 = hexToRgb(color1);
+            const rgb2 = hexToRgb(color2);
+            
+            if (!rgb1 || !rgb2) return 0;
+
+            const diffR = Math.abs(rgb1.r - rgb2.r);
+            const diffG = Math.abs(rgb1.g - rgb2.g);
+            const diffB = Math.abs(rgb1.b - rgb2.b);
+            
+            const totalDiff = diffR + diffG + diffB;
+            const maxDiff = 255 * 3;
+            
+            const similarity = ((maxDiff - totalDiff) / maxDiff) * 100;
+            return Math.round(similarity);
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            currentLevel = 1;
+            document.getElementById('level').textContent = currentLevel;
+            showColor();
+        }
+
+        function showColor() {
+            originalColor = generateRandomColor();
+            const colorBlock = document.getElementById('color-block');
+            colorBlock.style.backgroundColor = originalColor;
+            colorBlock.textContent = '';
+            
+            document.getElementById('memorize-phase').style.display = 'block';
+            document.getElementById('pick-phase').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'none';
+            
+            let timeLeft = 5000;
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = timeLeft;
+            timerElement.classList.remove('warning');
+            
+            clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeLeft -= 100;
+                timerElement.textContent = timeLeft;
+                
+                if (timeLeft <= 1500) {
+                    timerElement.classList.add('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showColorPicker();
+                }
+            }, 100);
+        }
+
+        function showColorPicker() {
+            document.getElementById('memorize-phase').style.display = 'none';
+            document.getElementById('pick-phase').style.display = 'block';
+            document.getElementById('color-picker').value = '#ffffff';
+        }
+
+        function checkColor() {
+            const selectedColor = document.getElementById('color-picker').value;
+            const similarity = calculateSimilarity(originalColor, selectedColor);
+            
+            document.getElementById('pick-phase').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            
+            const resultScreen = document.getElementById('result-screen');
+            const resultTitle = document.getElementById('result-title');
+            const similarityScore = document.getElementById('similarity-score');
+            const resultMessage = document.getElementById('result-message');
+            const nextBtn = document.getElementById('next-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            
+            document.getElementById('original-preview').style.backgroundColor = originalColor;
+            document.getElementById('selected-preview').style.backgroundColor = selectedColor;
+            
+            similarityScore.textContent = `${similarity}%`;
+            
+            if (similarity >= 75) {
+                resultScreen.className = 'result success';
+                resultTitle.textContent = '🎉 Отлично!';
+                similarityScore.className = 'similarity-score score-high';
+                resultMessage.textContent = `Вы запомнили цвет с точностью ${similarity}%!`;
+                nextBtn.style.display = 'inline-block';
+                restartBtn.style.display = 'none';
+            } else {
+                resultScreen.className = 'result fail';
+                resultTitle.textContent = '😔 Игра окончена';
+                similarityScore.className = 'similarity-score score-low';
+                resultMessage.textContent = `Точность: ${similarity}%. Нужно было больше 75%!`;
+                nextBtn.style.display = 'none';
+                restartBtn.style.display = 'inline-block';
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            document.getElementById('level').textContent = currentLevel;
+            showColor();
+        }
+
+        function restartGame() {
+            currentLevel = 1;
+            document.getElementById('level').textContent = currentLevel;
+            document.getElementById('result-screen').style.display = 'none';
+            showColor();
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && document.getElementById('pick-phase').style.display === 'block') {
+                checkColor();
+            }
+        });
+    </script>
+</body>
+</html>
