@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#4a90d9">
-    <meta name="description" content="Игра Запомни цвет - проверь свою память цветов">
-    <title>Запомни цвет</title>
+    <meta name="description" content="Транскрибатор - распознавание речи с разделением по спикерам">
+    <title>Транскрибатор</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <style>
@@ -30,205 +30,517 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
+            max-width: 700px;
             width: 100%;
-            text-align: center;
         }
 
         h1 {
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             font-size: 2em;
+            text-align: center;
         }
 
-        .color-block {
-            width: 100%;
-            height: 300px;
-            border-radius: 15px;
-            margin: 20px 0;
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .controls {
             display: flex;
-            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
             align-items: center;
-            font-size: 3em;
-            font-weight: bold;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .timer {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #333;
-            margin: 20px 0;
-        }
-
-        .timer.warning {
-            color: #e74c3c;
-            animation: pulse 0.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .color-picker-section {
-            display: none;
-            margin-top: 20px;
-        }
-
-        .color-picker-wrapper {
-            margin: 20px 0;
-        }
-
-        input[type="color"] {
-            width: 100%;
-            height: 60px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            padding: 0;
-            background: none;
+            justify-content: center;
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2em;
+            padding: 15px 30px;
+            font-size: 1.1em;
             border-radius: 50px;
             cursor: pointer;
-            margin: 10px;
             transition: transform 0.2s, box-shadow 0.2s;
             font-weight: bold;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
         .btn:active {
             transform: translateY(0);
         }
 
-        .btn-secondary {
+        .btn-record {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-record.recording {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            animation: pulse 1s infinite;
+        }
+
+        .btn-stop {
             background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
         }
 
-        .result {
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 15px;
-            display: none;
+        .btn-copy {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
         }
 
-        .result.success {
-            background: #d4edda;
-            border: 2px solid #28a745;
+        .btn-clear {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            color: white;
         }
 
-        .result.fail {
-            background: #f8d7da;
-            border: 2px solid #dc3545;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
-        .similarity-score {
-            font-size: 3em;
+        .speaker-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f5f5f5;
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+
+        .speaker-selector label {
             font-weight: bold;
-            margin: 10px 0;
+            color: #333;
         }
 
-        .score-high {
-            color: #28a745;
+        .speaker-selector select {
+            padding: 8px 15px;
+            border-radius: 25px;
+            border: 2px solid #667eea;
+            font-size: 1em;
+            cursor: pointer;
+            outline: none;
         }
 
-        .score-low {
-            color: #dc3545;
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
         }
 
-        .level-info {
-            font-size: 1.2em;
+        .status.idle {
+            background: #f0f0f0;
             color: #666;
-            margin-bottom: 10px;
         }
+
+        .status.recording {
+            background: #ffeaea;
+            color: #e74c3c;
+        }
+
+        .status.paused {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .transcript-container {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+        }
+
+        .transcript-line {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+
+        .speaker-1 {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .speaker-2 {
+            background: #fce4ec;
+            border-left: 4px solid #e91e63;
+        }
+
+        .speaker-3 {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .speaker-4 {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .speaker-label {
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .speaker-1 .speaker-label { color: #1976d2; }
+        .speaker-2 .speaker-label { color: #c2185b; }
+        .speaker-3 .speaker-label { color: #388e3c; }
+        .speaker-4 .speaker-label { color: #f57c00; }
+
+        .transcript-text {
+            color: #333;
+            font-size: 1em;
+        }
+
+        .current-speaker-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .indicator-1 { background: #2196f3; }
+        .indicator-2 { background: #e91e63; }
+        .indicator-3 { background: #4caf50; }
+        .indicator-4 { background: #ff9800; }
 
         .hidden {
             display: none;
         }
 
-        .original-color-preview,
-        .selected-color-preview {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid #333;
-            margin: 5px;
-            vertical-align: middle;
+        .copy-notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
         }
 
-        .color-comparison {
-            margin: 20px 0;
+        .copy-notification.show {
+            opacity: 1;
+        }
+
+        .recording-time {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #666;
+            margin-left: 15px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎨 Запомни цвет</h1>
+        <h1>🎙️ Транскрибатор</h1>
+        <p class="subtitle">Распознавание речи с разделением по спикерам</p>
         
-        <div id="start-screen">
-            <p style="margin: 20px 0; color: #666;">
-                Запомните цвет, который появится на экране.<br>
-                У вас есть 5 секунд!<br><br>
-                Если вы угадаете цвет с точностью более 75%,<br>
-                вы перейдете на следующий уровень.
-            </p>
-            <button class="btn" onclick="startGame()">Начать игру</button>
+        <div class="controls">
+            <button class="btn btn-record" id="record-btn" onclick="toggleRecording()">
+                <span id="record-icon">🎤</span>
+                <span id="record-text">Начать запись</span>
+            </button>
+            
+            <div class="speaker-selector">
+                <label>Спикер:</label>
+                <select id="speaker-select" onchange="changeSpeaker()">
+                    <option value="1">🔵 Спикер 1</option>
+                    <option value="2">🔴 Спикер 2</option>
+                    <option value="3">🟢 Спикер 3</option>
+                    <option value="4">🟠 Спикер 4</option>
+                </select>
+                <span class="current-speaker-indicator indicator-1" id="speaker-indicator"></span>
+            </div>
+            
+            <span class="recording-time" id="recording-time">00:00</span>
         </div>
 
-        <div id="game-screen" class="hidden">
-            <div class="level-info">Уровень: <span id="level">1</span></div>
-            
-            <div id="memorize-phase">
-                <div class="color-block" id="color-block"></div>
-                <div class="timer" id="timer">5000</div>
-            </div>
+        <div class="status idle" id="status">
+            Нажмите "Начать запись" для старта
+        </div>
 
-            <div id="pick-phase" class="color-picker-section">
-                <p style="color: #666; margin-bottom: 10px;">Выберите цвет, который вы запомнили:</p>
-                <div class="color-picker-wrapper">
-                    <input type="color" id="color-picker" value="#ffffff">
-                </div>
-                <button class="btn" onclick="checkColor()">OK</button>
-            </div>
+        <div class="transcript-container" id="transcript-container">
+            <p style="color: #999; text-align: center; margin-top: 100px;">
+                Здесь появится распознанный текст...
+            </p>
+        </div>
 
-            <div id="result-screen" class="result">
-                <h2 id="result-title"></h2>
-                <div class="color-comparison">
-                    <div>
-                        <div class="original-color-preview" id="original-preview"></div>
-                        <p>Оригинал</p>
-                    </div>
-                    <div>
-                        <div class="selected-color-preview" id="selected-preview"></div>
-                        <p>Ваш выбор</p>
-                    </div>
-                </div>
-                <div class="similarity-score" id="similarity-score"></div>
-                <p id="result-message"></p>
-                <button class="btn" id="next-btn" onclick="nextLevel()">Следующий уровень</button>
-                <button class="btn btn-secondary" id="restart-btn" onclick="restartGame()">Начать заново</button>
-            </div>
+        <div class="controls" style="margin-top: 20px;">
+            <button class="btn btn-copy" onclick="copyTranscript()">
+                📋 Копировать текст
+            </button>
+            <button class="btn btn-clear" onclick="clearTranscript()">
+                🗑️ Очистить
+            </button>
         </div>
     </div>
 
+    <div class="copy-notification" id="copy-notification">
+        Текст скопирован в буфер обмена!
+    </div>
+
     <script>
-        let currentLevel = 1;
-        let originalColor = '';
-        let timerInterval = null;
+        let recognition = null;
+        let isRecording = false;
+        let currentSpeaker = '1';
+        let transcriptData = [];
+        let recordingStartTime = null;
+        let recordingTimer = null;
+
+        // Проверка поддержки Web Speech API
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert('Ваш браузер не поддерживает распознавание речи. Пожалуйста, используйте Google Chrome или другой поддерживаемый браузер.');
+        } else {
+            initRecognition();
+        }
+
+        function initRecognition() {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'ru-RU';
+
+            recognition.onstart = function() {
+                isRecording = true;
+                updateUI();
+                startRecordingTimer();
+            };
+
+            recognition.onend = function() {
+                if (isRecording) {
+                    recognition.start();
+                } else {
+                    stopRecordingTimer();
+                    updateUI();
+                }
+            };
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (finalTranscript) {
+                    addTranscriptLine(finalTranscript, currentSpeaker);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Ошибка распознавания:', event.error);
+                const statusEl = document.getElementById('status');
+                
+                if (event.error === 'no-speech') {
+                    statusEl.textContent = '⚠️ Речь не обнаружена. Попробуйте говорить громче.';
+                } else if (event.error === 'audio-capture') {
+                    statusEl.textContent = '⚠️ Микрофон не найден. Проверьте подключение.';
+                } else if (event.error === 'not-allowed') {
+                    statusEl.textContent = '⚠️ Доступ к микрофону запрещен.';
+                    isRecording = false;
+                } else {
+                    statusEl.textContent = '⚠️ Ошибка: ' + event.error;
+                }
+                
+                statusEl.className = 'status paused';
+            };
+        }
+
+        function toggleRecording() {
+            if (!recognition) return;
+
+            if (isRecording) {
+                isRecording = false;
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function changeSpeaker() {
+            currentSpeaker = document.getElementById('speaker-select').value;
+            updateSpeakerIndicator();
+        }
+
+        function updateSpeakerIndicator() {
+            const indicator = document.getElementById('speaker-indicator');
+            indicator.className = 'current-speaker-indicator indicator-' + currentSpeaker;
+        }
+
+        function addTranscriptLine(text, speaker) {
+            const container = document.getElementById('transcript-container');
+            
+            // Удаляем placeholder если он есть
+            const placeholder = container.querySelector('p[style*="text-align: center"]');
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            const transcriptObj = {
+                speaker: speaker,
+                text: text,
+                timestamp: new Date()
+            };
+            
+            transcriptData.push(transcriptObj);
+
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'transcript-line speaker-' + speaker;
+            
+            const speakerNames = {
+                '1': 'Спикер 1',
+                '2': 'Спикер 2',
+                '3': 'Спикер 3',
+                '4': 'Спикер 4'
+            };
+
+            lineDiv.innerHTML = `
+                <div class="speaker-label">${speakerNames[speaker]}</div>
+                <div class="transcript-text">${escapeHtml(text)}</div>
+            `;
+
+            container.appendChild(lineDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateUI() {
+            const recordBtn = document.getElementById('record-btn');
+            const recordIcon = document.getElementById('record-icon');
+            const recordText = document.getElementById('record-text');
+            const statusEl = document.getElementById('status');
+            const speakerSelect = document.getElementById('speaker-select');
+
+            if (isRecording) {
+                recordBtn.classList.add('recording');
+                recordIcon.textContent = '⏹️';
+                recordText.textContent = 'Остановить';
+                statusEl.textContent = '🔴 Запись идет... Выберите спикера перед началом речи';
+                statusEl.className = 'status recording';
+                speakerSelect.disabled = false;
+            } else {
+                recordBtn.classList.remove('recording');
+                recordIcon.textContent = '🎤';
+                recordText.textContent = 'Начать запись';
+                statusEl.textContent = '⏸️ Запись остановлена';
+                statusEl.className = 'status paused';
+                speakerSelect.disabled = false;
+            }
+        }
+
+        function startRecordingTimer() {
+            recordingStartTime = Date.now();
+            recordingTimer = setInterval(updateRecordingTime, 1000);
+        }
+
+        function stopRecordingTimer() {
+            if (recordingTimer) {
+                clearInterval(recordingTimer);
+                recordingTimer = null;
+            }
+        }
+
+        function updateRecordingTime() {
+            if (!recordingStartTime) return;
+            
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            
+            document.getElementById('recording-time').textContent = `${minutes}:${seconds}`;
+        }
+
+        function getFullTranscript() {
+            const speakerNames = {
+                '1': 'Спикер 1',
+                '2': 'Спикер 2',
+                '3': 'Спикер 3',
+                '4': 'Спикер 4'
+            };
+
+            return transcriptData.map(item => {
+                return `${speakerNames[item.speaker]}: ${item.text}`;
+            }).join('\n');
+        }
+
+        function copyTranscript() {
+            const text = getFullTranscript();
+            
+            if (!text) {
+                alert('Нет текста для копирования');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification();
+            }).catch(err => {
+                // Fallback для старых браузеров
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showNotification();
+            });
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('copy-notification');
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        function clearTranscript() {
+            if (transcriptData.length === 0) return;
+            
+            if (confirm('Вы уверены, что хотите очистить весь текст?')) {
+                transcriptData = [];
+                const container = document.getElementById('transcript-container');
+                container.innerHTML = `
+                    <p style="color: #999; text-align: center; margin-top: 100px;">
+                        Здесь появится распознанный текст...
+                    </p>
+                `;
+            }
+        }
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
@@ -236,143 +548,6 @@
                 .then(reg => console.log('Service Worker registered:', reg))
                 .catch(err => console.log('Service Worker registration failed:', err));
         }
-
-        function generateRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
-
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
-
-        function calculateSimilarity(color1, color2) {
-            const rgb1 = hexToRgb(color1);
-            const rgb2 = hexToRgb(color2);
-            
-            if (!rgb1 || !rgb2) return 0;
-
-            const diffR = Math.abs(rgb1.r - rgb2.r);
-            const diffG = Math.abs(rgb1.g - rgb2.g);
-            const diffB = Math.abs(rgb1.b - rgb2.b);
-            
-            const totalDiff = diffR + diffG + diffB;
-            const maxDiff = 255 * 3;
-            
-            const similarity = ((maxDiff - totalDiff) / maxDiff) * 100;
-            return Math.round(similarity);
-        }
-
-        function startGame() {
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            currentLevel = 1;
-            document.getElementById('level').textContent = currentLevel;
-            showColor();
-        }
-
-        function showColor() {
-            originalColor = generateRandomColor();
-            const colorBlock = document.getElementById('color-block');
-            colorBlock.style.backgroundColor = originalColor;
-            colorBlock.textContent = '';
-            
-            document.getElementById('memorize-phase').style.display = 'block';
-            document.getElementById('pick-phase').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'none';
-            
-            let timeLeft = 5000;
-            const timerElement = document.getElementById('timer');
-            timerElement.textContent = timeLeft;
-            timerElement.classList.remove('warning');
-            
-            clearInterval(timerInterval);
-            
-            timerInterval = setInterval(() => {
-                timeLeft -= 100;
-                timerElement.textContent = timeLeft;
-                
-                if (timeLeft <= 1500) {
-                    timerElement.classList.add('warning');
-                }
-                
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    showColorPicker();
-                }
-            }, 100);
-        }
-
-        function showColorPicker() {
-            document.getElementById('memorize-phase').style.display = 'none';
-            document.getElementById('pick-phase').style.display = 'block';
-            document.getElementById('color-picker').value = '#ffffff';
-        }
-
-        function checkColor() {
-            const selectedColor = document.getElementById('color-picker').value;
-            const similarity = calculateSimilarity(originalColor, selectedColor);
-            
-            document.getElementById('pick-phase').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'block';
-            
-            const resultScreen = document.getElementById('result-screen');
-            const resultTitle = document.getElementById('result-title');
-            const similarityScore = document.getElementById('similarity-score');
-            const resultMessage = document.getElementById('result-message');
-            const nextBtn = document.getElementById('next-btn');
-            const restartBtn = document.getElementById('restart-btn');
-            
-            document.getElementById('original-preview').style.backgroundColor = originalColor;
-            document.getElementById('selected-preview').style.backgroundColor = selectedColor;
-            
-            similarityScore.textContent = `${similarity}%`;
-            
-            if (similarity >= 75) {
-                resultScreen.className = 'result success';
-                resultTitle.textContent = '🎉 Отлично!';
-                similarityScore.className = 'similarity-score score-high';
-                resultMessage.textContent = `Вы запомнили цвет с точностью ${similarity}%!`;
-                nextBtn.style.display = 'inline-block';
-                restartBtn.style.display = 'none';
-            } else {
-                resultScreen.className = 'result fail';
-                resultTitle.textContent = '😔 Игра окончена';
-                similarityScore.className = 'similarity-score score-low';
-                resultMessage.textContent = `Точность: ${similarity}%. Нужно было больше 75%!`;
-                nextBtn.style.display = 'none';
-                restartBtn.style.display = 'inline-block';
-            }
-        }
-
-        function nextLevel() {
-            currentLevel++;
-            document.getElementById('level').textContent = currentLevel;
-            showColor();
-        }
-
-        function restartGame() {
-            currentLevel = 1;
-            document.getElementById('level').textContent = currentLevel;
-            document.getElementById('result-screen').style.display = 'none';
-            showColor();
-        }
-
-        // Keyboard support
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && document.getElementById('pick-phase').style.display === 'block') {
-                checkColor();
-            }
-        });
     </script>
 </body>
 </html>
