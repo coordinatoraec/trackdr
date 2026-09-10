@@ -3,715 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4a90d9">
-    <meta name="description" content="Транскрибатор - распознавание речи с разделением по спикерам">
-    <title>Транскрибатор</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>Управление судоремонтными проектами</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 700px;
-            width: 100%;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2em;
-            text-align: center;
-        }
-
-        .subtitle {
-            color: #666;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn {
-            padding: 15px 30px;
-            font-size: 1.1em;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: bold;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-record {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-        }
-
-        .btn-record.recording {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            animation: pulse 1s infinite;
-        }
-
-        .btn-stop {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            color: white;
-        }
-
-        .btn-copy {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-        }
-
-        .btn-clear {
-            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-            color: white;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .speaker-selector {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #f5f5f5;
-            padding: 10px 20px;
-            border-radius: 50px;
-        }
-
-        .speaker-selector label {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .speaker-selector select {
-            padding: 8px 15px;
-            border-radius: 25px;
-            border: 2px solid #667eea;
-            font-size: 1em;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .status {
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .status.idle {
-            background: #f0f0f0;
-            color: #666;
-        }
-
-        .status.recording {
-            background: #ffeaea;
-            color: #e74c3c;
-        }
-
-        .status.paused {
-            background: #e8f5e9;
-            color: #27ae60;
-        }
-
-        .transcript-container {
-            background: #f9f9f9;
-            border-radius: 15px;
-            padding: 20px;
-            min-height: 300px;
-            max-height: 500px;
-            overflow-y: auto;
-            border: 2px solid #e0e0e0;
-        }
-
-        .transcript-line {
-            margin-bottom: 15px;
-            padding: 12px 15px;
-            border-radius: 10px;
-            line-height: 1.5;
-        }
-
-        .speaker-1 {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-        }
-
-        .speaker-2 {
-            background: #fce4ec;
-            border-left: 4px solid #e91e63;
-        }
-
-        .speaker-3 {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-        }
-
-        .speaker-4 {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-        }
-
-        .speaker-label {
-            font-weight: bold;
-            font-size: 0.85em;
-            margin-bottom: 5px;
-            opacity: 0.8;
-        }
-
-        .speaker-1 .speaker-label { color: #1976d2; }
-        .speaker-2 .speaker-label { color: #c2185b; }
-        .speaker-3 .speaker-label { color: #388e3c; }
-        .speaker-4 .speaker-label { color: #f57c00; }
-
-        .transcript-text {
-            color: #333;
-            font-size: 1em;
-        }
-
-        .current-speaker-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .indicator-1 { background: #2196f3; }
-        .indicator-2 { background: #e91e63; }
-        .indicator-3 { background: #4caf50; }
-        .indicator-4 { background: #ff9800; }
-
-        .hidden {
-            display: none;
-        }
-
-        .copy-notification {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 1000;
-        }
-
-        .copy-notification.show {
-            opacity: 1;
-        }
-
-        .recording-time {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #666;
-            margin-left: 15px;
-        }
-
-        .speaker-names-btn {
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            border: none;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.2s;
-        }
-
-        .speaker-names-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal h2 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .speaker-name-input {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 10px;
-        }
-
-        .speaker-name-input input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 2px solid #667eea;
-            border-radius: 25px;
-            font-size: 1em;
-            outline: none;
-        }
-
-        .speaker-name-input input:focus {
-            border-color: #9b59b6;
-        }
-
-        .speaker-color-indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        .btn-save {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-        }
-
-        .btn-cancel {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            color: white;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+        h1 { color: #1a365d; margin-bottom: 10px; font-size: 2em; text-align: center; }
+        .subtitle { color: #666; text-align: center; margin-bottom: 25px; }
+        .controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+        .controls-left, .controls-right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 10px 20px; font-size: 0.95em; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; font-weight: bold; border: none; display: flex; align-items: center; gap: 8px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); }
+        .btn-primary { background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%); color: white; }
+        .btn-success { background: linear-gradient(135deg, #38a169 0%, #276749 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%); color: white; }
+        .btn-secondary { background: linear-gradient(135deg, #718096 0%, #4a5568 100%); color: white; }
+        .btn-info { background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%); color: white; }
+        .search-box { padding: 10px 15px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 0.95em; width: 250px; outline: none; }
+        .search-box:focus { border-color: #2c5282; }
+        .filter-select { padding: 10px 15px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 0.95em; cursor: pointer; outline: none; background: white; }
+        .filter-select:focus { border-color: #2c5282; }
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%); color: white; font-weight: bold; cursor: pointer; user-select: none; white-space: nowrap; }
+        th:hover { background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); }
+        tr:hover { background: #f7fafc; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: bold; display: inline-block; }
+        .status-new { background: #bee3f8; color: #2c5282; }
+        .status-in-progress { background: #fef3c7; color: #d69e2e; }
+        .status-review { background: #e9d8fd; color: #6b46c1; }
+        .status-completed { background: #c6f6d5; color: #276749; }
+        .status-cancelled { background: #fed7d7; color: #c53030; }
+        .actions-cell { display: flex; gap: 8px; }
+        .btn-small { padding: 5px 10px; font-size: 0.85em; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: white; border-radius: 15px; padding: 30px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+        .modal h2 { color: #1a365d; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 1em; outline: none; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2c5282; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-buttons { display: flex; gap: 15px; margin-top: 25px; justify-content: flex-end; }
+        .chat-page { display: none; }
+        .chat-page.active { display: block; }
+        .main-view.hidden { display: none; }
+        .chat-header { background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .chat-header h2 { color: white; margin-bottom: 10px; }
+        .chat-header-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.9em; }
+        .chat-header-info div { background: rgba(255, 255, 255, 0.1); padding: 8px 12px; border-radius: 5px; }
+        .chat-messages { background: #f7fafc; border-radius: 10px; padding: 20px; height: 400px; overflow-y: auto; margin-bottom: 20px; }
+        .message { margin-bottom: 15px; padding: 12px 15px; border-radius: 10px; background: white; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+        .message.own { background: #bee3f8; margin-left: 20%; }
+        .message-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85em; color: #666; }
+        .message-author { font-weight: bold; color: #2c5282; }
+        .message-time { color: #999; }
+        .message-body { color: #333; line-height: 1.5; }
+        .chat-input-area { display: flex; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 12px 15px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 1em; outline: none; }
+        .chat-input-area input:focus { border-color: #2c5282; }
+        .back-btn { margin-bottom: 20px; }
+        .sort-indicator { margin-left: 5px; }
+        .executors-list { display: flex; flex-wrap: wrap; gap: 5px; }
+        .executor-badge { background: #e2e8f0; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; }
+        @media (max-width: 768px) { .controls { flex-direction: column; align-items: stretch; } .controls-left, .controls-right { flex-direction: column; } .search-box { width: 100%; } .form-row { grid-template-columns: 1fr; } .chat-header-info { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎙️ Транскрибатор</h1>
-        <p class="subtitle">Распознавание речи с разделением по спикерам</p>
-        
+    <div class="container main-view" id="main-view">
+        <h1>⚓ Управление судоремонтными проектами</h1>
+        <p class="subtitle">Система управления жизненным циклом судоремонтных проектов</p>
         <div class="controls">
-            <button class="btn btn-record" id="record-btn" onclick="toggleRecording()">
-                <span id="record-icon">🎤</span>
-                <span id="record-text">Начать запись</span>
-            </button>
-            
-            <div class="speaker-selector">
-                <label>Спикер:</label>
-                <select id="speaker-select" onchange="changeSpeaker()">
-                    <option value="1">🔵 Спикер 1</option>
-                    <option value="2">🔴 Спикер 2</option>
-                    <option value="3">🟢 Спикер 3</option>
-                    <option value="4">🟠 Спикер 4</option>
+            <div class="controls-left">
+                <button class="btn btn-primary" onclick="openProjectModal()">📁 Новый проект</button>
+                <button class="btn btn-success" onclick="openTaskModal()">✅ Новая задача</button>
+            </div>
+            <div class="controls-right">
+                <input type="text" class="search-box" id="search-input" placeholder="🔍 Поиск..." oninput="renderTable()">
+                <select class="filter-select" id="status-filter" onchange="renderTable()">
+                    <option value="">Все статусы</option>
+                    <option value="new">Новый</option>
+                    <option value="in-progress">В работе</option>
+                    <option value="review">На проверке</option>
+                    <option value="completed">Завершен</option>
+                    <option value="cancelled">Отменен</option>
                 </select>
-                <span class="current-speaker-indicator indicator-1" id="speaker-indicator"></span>
+                <select class="filter-select" id="type-filter" onchange="renderTable()">
+                    <option value="">Все типы</option>
+                    <option value="project">Проекты</option>
+                    <option value="task">Задачи</option>
+                </select>
             </div>
-            
-            <button class="btn speaker-names-btn" onclick="openSpeakerNamesModal()">
-                ✏️ Имена спикеров
-            </button>
-            
-            <span class="recording-time" id="recording-time">00:00</span>
         </div>
-
-        <div class="status idle" id="status">
-            Нажмите "Начать запись" для старта
-        </div>
-
-        <div class="transcript-container" id="transcript-container">
-            <p style="color: #999; text-align: center; margin-top: 100px;">
-                Здесь появится распознанный текст...
-            </p>
-        </div>
-
-        <div class="controls" style="margin-top: 20px;">
-            <button class="btn btn-copy" onclick="copyTranscript()">
-                📋 Копировать текст
-            </button>
-            <button class="btn btn-clear" onclick="clearTranscript()">
-                🗑️ Очистить
-            </button>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortBy('id')">ID <span class="sort-indicator" id="sort-id"></span></th>
+                        <th onclick="sortBy('projectName')">Проект <span class="sort-indicator" id="sort-projectName"></span></th>
+                        <th onclick="sortBy('taskName')">Задача <span class="sort-indicator" id="sort-taskName"></span></th>
+                        <th onclick="sortBy('vessel')">Судно <span class="sort-indicator" id="sort-vessel"></span></th>
+                        <th onclick="sortBy('author')">Автор <span class="sort-indicator" id="sort-author"></span></th>
+                        <th onclick="sortBy('executors')">Исполнители <span class="sort-indicator" id="sort-executors"></span></th>
+                        <th onclick="sortBy('status')">Статус <span class="sort-indicator" id="sort-status"></span></th>
+                        <th onclick="sortBy('createdAt')">Дата создания <span class="sort-indicator" id="sort-createdAt"></span></th>
+                        <th onclick="sortBy('endDate')">Дата окончания <span class="sort-indicator" id="sort-endDate"></span></th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
         </div>
     </div>
 
-    <div class="copy-notification" id="copy-notification">
-        Текст скопирован в буфер обмена!
+    <div class="container chat-page" id="chat-page">
+        <button class="btn btn-secondary back-btn" onclick="showMainView()">← Назад к списку</button>
+        <div class="chat-header">
+            <h2 id="chat-title">Информация о задаче</h2>
+            <div class="chat-header-info" id="chat-header-info"></div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Введите сообщение..." onkeypress="handleChatKeyPress(event)">
+            <button class="btn btn-primary" onclick="sendMessage()">📤 Отправить</button>
+        </div>
     </div>
 
-    <div class="modal-overlay" id="speaker-names-modal">
+    <div class="modal-overlay" id="project-modal">
         <div class="modal">
-            <h2>✏️ Назначить имена спикерам</h2>
-            
-            <div class="speaker-name-input">
-                <span class="speaker-color-indicator indicator-1"></span>
-                <input type="text" id="speaker-name-1" placeholder="Имя для Спикера 1" value="Спикер 1">
-            </div>
-            
-            <div class="speaker-name-input">
-                <span class="speaker-color-indicator indicator-2"></span>
-                <input type="text" id="speaker-name-2" placeholder="Имя для Спикера 2" value="Спикер 2">
-            </div>
-            
-            <div class="speaker-name-input">
-                <span class="speaker-color-indicator indicator-3"></span>
-                <input type="text" id="speaker-name-3" placeholder="Имя для Спикера 3" value="Спикер 3">
-            </div>
-            
-            <div class="speaker-name-input">
-                <span class="speaker-color-indicator indicator-4"></span>
-                <input type="text" id="speaker-name-4" placeholder="Имя для Спикера 4" value="Спикер 4">
-            </div>
-            
+            <h2 id="project-modal-title">📁 Новый проект</h2>
+            <form id="project-form" onsubmit="saveProject(event)">
+                <input type="hidden" id="project-id">
+                <div class="form-group"><label for="project-name">Название проекта *</label><input type="text" id="project-name" required></div>
+                <div class="form-group"><label for="project-vessel">Судно *</label><input type="text" id="project-vessel" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="project-author">Автор *</label><input type="text" id="project-author" required></div>
+                    <div class="form-group"><label for="project-status">Статус</label>
+                        <select id="project-status">
+                            <option value="new">Новый</option>
+                            <option value="in-progress">В работе</option>
+                            <option value="review">На проверке</option>
+                            <option value="completed">Завершен</option>
+                            <option value="cancelled">Отменен</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="project-start-date">Дата начала</label><input type="date" id="project-start-date"></div>
+                    <div class="form-group"><label for="project-end-date">Дата окончания</label><input type="date" id="project-end-date"></div>
+                </div>
+                <div class="form-group"><label for="project-description">Описание</label><textarea id="project-description"></textarea></div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('project-modal')">❌ Отмена</button>
+                    <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal">
+            <h2 id="task-modal-title">✅ Новая задача</h2>
+            <form id="task-form" onsubmit="saveTask(event)">
+                <input type="hidden" id="task-id">
+                <div class="form-group"><label for="task-project">Проект *</label>
+                    <select id="task-project" required onchange="updateTaskVessel()"><option value="">Выберите проект</option></select>
+                </div>
+                <div class="form-group"><label for="task-name">Название задачи *</label><input type="text" id="task-name" required></div>
+                <div class="form-group"><label for="task-vessel">Судно</label><input type="text" id="task-vessel" readonly></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="task-author">Автор *</label><input type="text" id="task-author" required></div>
+                    <div class="form-group"><label for="task-status">Статус</label>
+                        <select id="task-status">
+                            <option value="new">Новый</option>
+                            <option value="in-progress">В работе</option>
+                            <option value="review">На проверке</option>
+                            <option value="completed">Завершен</option>
+                            <option value="cancelled">Отменен</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label for="task-executors">Исполнители (через запятую)</label><input type="text" id="task-executors" placeholder="Иванов И.И., Петров П.П."></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="task-start-date">Дата начала</label><input type="date" id="task-start-date"></div>
+                    <div class="form-group"><label for="task-end-date">Дата окончания</label><input type="date" id="task-end-date"></div>
+                </div>
+                <div class="form-group"><label for="task-description">Описание</label><textarea id="task-description"></textarea></div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('task-modal')">❌ Отмена</button>
+                    <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <h2>⚠️ Подтверждение удаления</h2>
+            <p id="delete-message">Вы уверены, что хотите удалить этот элемент?</p>
+            <input type="hidden" id="delete-type"><input type="hidden" id="delete-id">
             <div class="modal-buttons">
-                <button class="btn btn-save" onclick="saveSpeakerNames()">💾 Сохранить</button>
-                <button class="btn btn-cancel" onclick="closeSpeakerNamesModal()">❌ Отмена</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('delete-modal')">❌ Отмена</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">🗑️ Удалить</button>
             </div>
         </div>
     </div>
 
     <script>
-        let recognition = null;
-        let isRecording = false;
-        let currentSpeaker = '1';
-        let transcriptData = [];
-        let recordingStartTime = null;
-        let recordingTimer = null;
-        
-        // Имена спикеров по умолчанию
-        let speakerNames = {
-            '1': 'Спикер 1',
-            '2': 'Спикер 2',
-            '3': 'Спикер 3',
-            '4': 'Спикер 4'
-        };
+        let projects = JSON.parse(localStorage.getItem('shipyard_projects')) || [];
+        let tasks = JSON.parse(localStorage.getItem('shipyard_tasks')) || [];
+        let chats = JSON.parse(localStorage.getItem('shipyard_chats')) || {};
+        let currentSort = { field: 'id', direction: 'asc' };
+        let currentChatTaskId = null;
 
-        // Проверка поддержки Web Speech API
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        function init() { renderTable(); setupDefaultDates(); }
+        function setupDefaultDates() { const today = new Date().toISOString().split('T')[0]; document.getElementById('project-start-date').value = today; document.getElementById('task-start-date').value = today; }
+        function saveData() { localStorage.setItem('shipyard_projects', JSON.stringify(projects)); localStorage.setItem('shipyard_tasks', JSON.stringify(tasks)); localStorage.setItem('shipyard_chats', JSON.stringify(chats)); }
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
 
-        if (!SpeechRecognition) {
-            alert('Ваш браузер не поддерживает распознавание речи. Пожалуйста, используйте Google Chrome или другой поддерживаемый браузер.');
-        } else {
-            initRecognition();
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const typeFilter = document.getElementById('type-filter').value;
+            let allItems = [];
+            projects.forEach(project => { allItems.push({ ...project, type: 'project', taskName: '-' }); });
+            tasks.forEach(task => { const project = projects.find(p => p.id === task.projectId); allItems.push({ ...task, type: 'task', projectName: project ? project.name : 'Неизвестный проект', vessel: task.vessel || (project ? project.vessel : '-') }); });
+            let filteredItems = allItems.filter(item => { const matchesSearch = item.name.toLowerCase().includes(searchTerm) || (item.projectName && item.projectName.toLowerCase().includes(searchTerm)) || (item.vessel && item.vessel.toLowerCase().includes(searchTerm)) || (item.author && item.author.toLowerCase().includes(searchTerm)); const matchesStatus = !statusFilter || item.status === statusFilter; const matchesType = !typeFilter || item.type === typeFilter; return matchesSearch && matchesStatus && matchesType; });
+            filteredItems.sort((a, b) => { let aVal = a[currentSort.field] || ''; let bVal = b[currentSort.field] || ''; if (currentSort.field === 'executors') { aVal = Array.isArray(a.executors) ? a.executors.join(', ') : ''; bVal = Array.isArray(b.executors) ? b.executors.join(', ') : ''; } if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1; if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1; return 0; });
+            tbody.innerHTML = filteredItems.map(item => '<tr><td>' + item.id.substr(0, 8) + '</td><td>' + (item.type === 'project' ? item.name : item.projectName) + '</td><td>' + item.taskName + '</td><td>' + (item.vessel || '-') + '</td><td>' + (item.author || '-') + '</td><td><div class="executors-list">' + (Array.isArray(item.executors) ? item.executors.map(e => '<span class="executor-badge">' + e + '</span>').join('') : '-') + '</div></td><td><span class="status-badge status-' + item.status + '">' + getStatusName(item.status) + '</span></td><td>' + formatDate(item.createdAt) + '</td><td>' + formatDate(item.endDate) + '</td><td><div class="actions-cell">' + (item.type === 'task' ? '<button class="btn btn-info btn-small" onclick="openChat(\'' + item.id + '\')">💬 Чат</button>' : '') + '<button class="btn btn-primary btn-small" onclick="edit' + (item.type === 'project' ? 'Project' : 'Task') + '(\'' + item.id + '\')">✏️</button><button class="btn btn-danger btn-small" onclick="confirmDeleteItem(\'' + item.type + '\', \'' + item.id + '\')">🗑️</button></div></td></tr>').join('');
         }
 
-        function initRecognition() {
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'ru-RU';
+        function getStatusName(status) { const names = { 'new': 'Новый', 'in-progress': 'В работе', 'review': 'На проверке', 'completed': 'Завершен', 'cancelled': 'Отменен' }; return names[status] || status; }
+        function formatDate(dateStr) { if (!dateStr) return '-'; return new Date(dateStr).toLocaleDateString('ru-RU'); }
 
-            recognition.onstart = function() {
-                isRecording = true;
-                updateUI();
-                startRecordingTimer();
-            };
+        function sortBy(field) { if (currentSort.field === field) { currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc'; } else { currentSort.field = field; currentSort.direction = 'asc'; } document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = ''); const indicator = document.getElementById('sort-' + field); if (indicator) { indicator.textContent = currentSort.direction === 'asc' ? '▲' : '▼'; } renderTable(); }
 
-            recognition.onend = function() {
-                if (isRecording) {
-                    recognition.start();
-                } else {
-                    stopRecordingTimer();
-                    updateUI();
-                }
-            };
+        function openProjectModal() { document.getElementById('project-modal-title').textContent = '📁 Новый проект'; document.getElementById('project-form').reset(); document.getElementById('project-id').value = ''; setupDefaultDates(); document.getElementById('project-modal').classList.add('show'); }
 
-            recognition.onresult = function(event) {
-                let interimTranscript = '';
-                let finalTranscript = '';
+        function openTaskModal() { document.getElementById('task-modal-title').textContent = '✅ Новая задача'; document.getElementById('task-form').reset(); document.getElementById('task-id').value = ''; setupDefaultDates(); const projectSelect = document.getElementById('task-project'); projectSelect.innerHTML = '<option value="">Выберите проект</option>'; projects.forEach(project => { projectSelect.innerHTML += '<option value="' + project.id + '">' + project.name + '</option>'; }); document.getElementById('task-modal').classList.add('show'); }
 
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
+        function editProject(id) { const project = projects.find(p => p.id === id); if (!project) return; document.getElementById('project-modal-title').textContent = '✏️ Редактировать проект'; document.getElementById('project-id').value = project.id; document.getElementById('project-name').value = project.name; document.getElementById('project-vessel').value = project.vessel; document.getElementById('project-author').value = project.author; document.getElementById('project-status').value = project.status; document.getElementById('project-start-date').value = project.startDate || ''; document.getElementById('project-end-date').value = project.endDate || ''; document.getElementById('project-description').value = project.description || ''; document.getElementById('project-modal').classList.add('show'); }
 
-                if (finalTranscript) {
-                    addTranscriptLine(finalTranscript, currentSpeaker);
-                }
-            };
+        function editTask(id) { const task = tasks.find(t => t.id === id); if (!task) return; document.getElementById('task-modal-title').textContent = '✏️ Редактировать задачу'; document.getElementById('task-id').value = task.id; const projectSelect = document.getElementById('task-project'); projectSelect.innerHTML = '<option value="">Выберите проект</option>'; projects.forEach(project => { projectSelect.innerHTML += '<option value="' + project.id + '">' + project.name + '</option>'; }); projectSelect.value = task.projectId; updateTaskVessel(); document.getElementById('task-name').value = task.name; document.getElementById('task-author').value = task.author; document.getElementById('task-status').value = task.status; document.getElementById('task-executors').value = Array.isArray(task.executors) ? task.executors.join(', ') : ''; document.getElementById('task-start-date').value = task.startDate || ''; document.getElementById('task-end-date').value = task.endDate || ''; document.getElementById('task-description').value = task.description || ''; document.getElementById('task-modal').classList.add('show'); }
 
-            recognition.onerror = function(event) {
-                console.error('Ошибка распознавания:', event.error);
-                const statusEl = document.getElementById('status');
-                
-                if (event.error === 'no-speech') {
-                    statusEl.textContent = '⚠️ Речь не обнаружена. Попробуйте говорить громче.';
-                } else if (event.error === 'audio-capture') {
-                    statusEl.textContent = '⚠️ Микрофон не найден. Проверьте подключение.';
-                } else if (event.error === 'not-allowed') {
-                    statusEl.textContent = '⚠️ Доступ к микрофону запрещен.';
-                    isRecording = false;
-                } else {
-                    statusEl.textContent = '⚠️ Ошибка: ' + event.error;
-                }
-                
-                statusEl.className = 'status paused';
-            };
-        }
+        function updateTaskVessel() { const projectId = document.getElementById('task-project').value; const project = projects.find(p => p.id === projectId); document.getElementById('task-vessel').value = project ? project.vessel : ''; }
 
-        function toggleRecording() {
-            if (!recognition) return;
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
 
-            if (isRecording) {
-                isRecording = false;
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
-        }
+        function saveProject(event) { event.preventDefault(); const id = document.getElementById('project-id').value; const projectData = { id: id || generateId(), name: document.getElementById('project-name').value, vessel: document.getElementById('project-vessel').value, author: document.getElementById('project-author').value, status: document.getElementById('project-status').value, startDate: document.getElementById('project-start-date').value, endDate: document.getElementById('project-end-date').value, description: document.getElementById('project-description').value, createdAt: id ? projects.find(p => p.id === id).createdAt : new Date().toISOString() }; if (id) { const index = projects.findIndex(p => p.id === id); projects[index] = projectData; } else { projects.push(projectData); } saveData(); closeModal('project-modal'); renderTable(); }
 
-        function changeSpeaker() {
-            currentSpeaker = document.getElementById('speaker-select').value;
-            updateSpeakerIndicator();
-        }
+        function saveTask(event) { event.preventDefault(); const id = document.getElementById('task-id').value; const executorsStr = document.getElementById('task-executors').value; const executors = executorsStr ? executorsStr.split(',').map(e => e.trim()).filter(e => e) : []; const taskData = { id: id || generateId(), projectId: document.getElementById('task-project').value, name: document.getElementById('task-name').value, vessel: document.getElementById('task-vessel').value, author: document.getElementById('task-author').value, status: document.getElementById('task-status').value, executors: executors, startDate: document.getElementById('task-start-date').value, endDate: document.getElementById('task-end-date').value, description: document.getElementById('task-description').value, createdAt: id ? tasks.find(t => t.id === id).createdAt : new Date().toISOString() }; if (id) { const index = tasks.findIndex(t => t.id === id); tasks[index] = taskData; } else { tasks.push(taskData); } saveData(); closeModal('task-modal'); renderTable(); }
 
-        function updateSpeakerIndicator() {
-            const indicator = document.getElementById('speaker-indicator');
-            indicator.className = 'current-speaker-indicator indicator-' + currentSpeaker;
-        }
+        function confirmDeleteItem(type, id) { document.getElementById('delete-type').value = type; document.getElementById('delete-id').value = id; document.getElementById('delete-message').textContent = 'Вы уверены, что хотите удалить этот ' + (type === 'project' ? 'проект' : 'задачу') + '?'; document.getElementById('delete-modal').classList.add('show'); }
 
-        function addTranscriptLine(text, speaker) {
-            const container = document.getElementById('transcript-container');
-            
-            // Удаляем placeholder если он есть
-            const placeholder = container.querySelector('p[style*="text-align: center"]');
-            if (placeholder) {
-                placeholder.remove();
-            }
+        function confirmDelete() { const type = document.getElementById('delete-type').value; const id = document.getElementById('delete-id').value; if (type === 'project') { projects = projects.filter(p => p.id !== id); tasks = tasks.filter(t => t.projectId !== id); } else { tasks = tasks.filter(t => t.id !== id); delete chats[id]; } saveData(); closeModal('delete-modal'); renderTable(); }
 
-            const transcriptObj = {
-                speaker: speaker,
-                text: text,
-                timestamp: new Date()
-            };
-            
-            transcriptData.push(transcriptObj);
+        function openChat(taskId) { currentChatTaskId = taskId; const task = tasks.find(t => t.id === taskId); if (!task) return; const project = projects.find(p => p.id === task.projectId); document.getElementById('main-view').classList.add('hidden'); document.getElementById('chat-page').classList.add('active'); document.getElementById('chat-title').textContent = '💬 ' + task.name; document.getElementById('chat-header-info').innerHTML = '<div><strong>Проект:</strong> ' + (project ? project.name : '-') + '</div><div><strong>Судно:</strong> ' + (task.vessel || '-') + '</div><div><strong>Автор:</strong> ' + (task.author || '-') + '</div><div><strong>Исполнители:</strong> ' + (Array.isArray(task.executors) ? task.executors.join(', ') : '-') + '</div><div><strong>Статус:</strong> ' + getStatusName(task.status) + '</div><div><strong>Дата окончания:</strong> ' + formatDate(task.endDate) + '</div>'; renderChatMessages(); }
 
-            const lineDiv = document.createElement('div');
-            lineDiv.className = 'transcript-line speaker-' + speaker;
-            
-            lineDiv.innerHTML = `
-                <div class="speaker-label">${speakerNames[speaker]}</div>
-                <div class="transcript-text">${escapeHtml(text)}</div>
-            `;
+        function showMainView() { document.getElementById('chat-page').classList.remove('active'); document.getElementById('main-view').classList.remove('hidden'); currentChatTaskId = null; }
 
-            container.appendChild(lineDiv);
-            container.scrollTop = container.scrollHeight;
-        }
+        function renderChatMessages() { const messagesContainer = document.getElementById('chat-messages'); const messages = chats[currentChatTaskId] || []; if (messages.length === 0) { messagesContainer.innerHTML = '<p style="color: #999; text-align: center; margin-top: 150px;">Сообщений пока нет. Будьте первым!</p>'; return; } messagesContainer.innerHTML = messages.map(msg => '<div class="message ' + (msg.isOwn ? 'own' : '') + '"><div class="message-header"><span class="message-author">' + msg.author + '</span><span class="message-time">' + formatDateTime(msg.timestamp) + '</span></div><div class="message-body">' + msg.text + '</div></div>').join(''); messagesContainer.scrollTop = messagesContainer.scrollHeight; }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+        function formatDateTime(timestamp) { const date = new Date(timestamp); return date.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
-        function updateUI() {
-            const recordBtn = document.getElementById('record-btn');
-            const recordIcon = document.getElementById('record-icon');
-            const recordText = document.getElementById('record-text');
-            const statusEl = document.getElementById('status');
-            const speakerSelect = document.getElementById('speaker-select');
+        function sendMessage() { const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text || !currentChatTaskId) return; if (!chats[currentChatTaskId]) { chats[currentChatTaskId] = []; } chats[currentChatTaskId].push({ author: 'Вы', text: text, timestamp: new Date().toISOString(), isOwn: true }); saveData(); input.value = ''; renderChatMessages(); setTimeout(function() { simulateResponse(); }, 1000); }
 
-            if (isRecording) {
-                recordBtn.classList.add('recording');
-                recordIcon.textContent = '⏹️';
-                recordText.textContent = 'Остановить';
-                statusEl.textContent = '🔴 Запись идет... Выберите спикера перед началом речи';
-                statusEl.className = 'status recording';
-                speakerSelect.disabled = false;
-            } else {
-                recordBtn.classList.remove('recording');
-                recordIcon.textContent = '🎤';
-                recordText.textContent = 'Начать запись';
-                statusEl.textContent = '⏸️ Запись остановлена';
-                statusEl.className = 'status paused';
-                speakerSelect.disabled = false;
-            }
-        }
+        function simulateResponse() { const responses = ['Принято в работу!', 'Хорошо, займусь этим вопросом.', 'Нужно уточнить детали.', 'Благодарю за информацию.', 'Выполню в ближайшее время.', 'Есть вопросы по ТЗ.', 'Согласовано.', 'Требуется дополнительное оборудование.']; const authors = ['Иванов И.И.', 'Петров П.П.', 'Сидоров С.С.', 'Главный инженер']; if (!chats[currentChatTaskId]) return; chats[currentChatTaskId].push({ author: authors[Math.floor(Math.random() * authors.length)], text: responses[Math.floor(Math.random() * responses.length)], timestamp: new Date().toISOString(), isOwn: false }); saveData(); renderChatMessages(); }
 
-        function startRecordingTimer() {
-            recordingStartTime = Date.now();
-            recordingTimer = setInterval(updateRecordingTime, 1000);
-        }
+        function handleChatKeyPress(event) { if (event.key === 'Enter') { sendMessage(); } }
 
-        function stopRecordingTimer() {
-            if (recordingTimer) {
-                clearInterval(recordingTimer);
-                recordingTimer = null;
-            }
-        }
-
-        function updateRecordingTime() {
-            if (!recordingStartTime) return;
-            
-            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
-            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const seconds = (elapsed % 60).toString().padStart(2, '0');
-            
-            document.getElementById('recording-time').textContent = `${minutes}:${seconds}`;
-        }
-
-        function getFullTranscript() {
-            return transcriptData.map(item => {
-                return `${speakerNames[item.speaker]}: ${item.text}`;
-            }).join('\n');
-        }
-
-        function copyTranscript() {
-            const text = getFullTranscript();
-            
-            if (!text) {
-                alert('Нет текста для копирования');
-                return;
-            }
-
-            navigator.clipboard.writeText(text).then(() => {
-                showNotification();
-            }).catch(err => {
-                // Fallback для старых браузеров
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showNotification();
-            });
-        }
-
-        function showNotification() {
-            const notification = document.getElementById('copy-notification');
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 2000);
-        }
-
-        function clearTranscript() {
-            if (transcriptData.length === 0) return;
-            
-            if (confirm('Вы уверены, что хотите очистить весь текст?')) {
-                transcriptData = [];
-                const container = document.getElementById('transcript-container');
-                container.innerHTML = `
-                    <p style="color: #999; text-align: center; margin-top: 100px;">
-                        Здесь появится распознанный текст...
-                    </p>
-                `;
-            }
-        }
-
-        // Функции для управления именами спикеров
-        function openSpeakerNamesModal() {
-            // Загружаем текущие имена в поля ввода
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById('speaker-name-' + i).value = speakerNames[i.toString()];
-            }
-            document.getElementById('speaker-names-modal').classList.add('show');
-        }
-
-        function closeSpeakerNamesModal() {
-            document.getElementById('speaker-names-modal').classList.remove('show');
-        }
-
-        function saveSpeakerNames() {
-            // Сохраняем имена из полей ввода
-            for (let i = 1; i <= 4; i++) {
-                const name = document.getElementById('speaker-name-' + i).value.trim();
-                if (name) {
-                    speakerNames[i.toString()] = name;
-                }
-            }
-            closeSpeakerNamesModal();
-        }
-
-        // Закрытие модального окна при клике вне его
-        document.getElementById('speaker-names-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeSpeakerNamesModal();
-            }
-        });
-
-        // Закрытие модального окна по клавише Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeSpeakerNamesModal();
-            }
-        });
-
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered:', reg))
-                .catch(err => console.log('Service Worker registration failed:', err));
-        }
+        init();
     </script>
 </body>
 </html>
